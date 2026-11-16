@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RX CODE PROTECTOR</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/terser@5.31.0/dist/bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/javascript-obfuscator@4.1.1/dist/index.browser.js"></script>
+<style>
+:root{
+  --bg:#080F1D; --bg2:#101B2D; --card:#142238; --accent:#00D9FF; --accent2:#398BFF;
+  --text:#F4F8FF; --muted:#93A4BC; --border:rgba(147,164,188,.18);
+  --ok:#2EE59D; --err:#FF6B7A; --radius:18px;
+}
+[data-theme="light"]{
+  --bg:#EEF3FA; --bg2:#FFFFFF; --card:#FFFFFF; --accent:#0088B8; --accent2:#1F5FD6;
+  --text:#0B1628; --muted:#4F5F78; --border:rgba(11,22,40,.12);
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,sans-serif;font-size:15px}
+h1,h2,h3,.rj{font-family:Rajdhani,sans-serif;letter-spacing:.3px;margin:0}
+button,select,input,textarea{font:inherit;color:inherit}
+.app{display:grid;grid-template-columns:240px 1fr;min-height:100vh}
+.sidebar{background:var(--bg2);border-right:1px solid var(--border);padding:22px 16px;position:sticky;top:0;height:100vh;overflow:auto}
+.brand{display:flex;align-items:center;gap:10px;margin-bottom:26px}
+.brand .logo{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#041020;font-size:18px}
+.brand b{font-family:Rajdhani;font-size:19px;letter-spacing:1px}
+.nav-btn{display:flex;align-items:center;gap:12px;width:100%;background:none;border:0;padding:11px 12px;border-radius:12px;color:var(--muted);cursor:pointer;text-align:left;transition:.2s}
+.nav-btn:hover{background:var(--card);color:var(--text)}
+.nav-btn.active{background:var(--card);color:var(--accent);box-shadow:inset 3px 0 0 var(--accent)}
+.nav-btn i{width:20px;text-align:center}
+.sidebar .sec{font-size:11px;text-transform:uppercase;color:var(--muted);margin:18px 12px 6px;letter-spacing:1px}
+main{padding:26px;min-width:0}
+.page-head{display:flex;align-items:center;gap:12px;margin-bottom:18px;flex-wrap:wrap}
+.page-head h1{font-size:28px}
+.tag{font-family:Rajdhani;font-size:12px;padding:3px 10px;border-radius:999px;border:1px solid var(--accent);color:var(--accent)}
+.view{display:none}.view.active{display:block;animation:fade .25s ease}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:16px}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.grid-2{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+.stat .num{font-family:Rajdhani;font-size:30px;font-weight:700;color:var(--accent)}
+.stat .lbl{color:var(--muted);font-size:13px}
+.qa{cursor:pointer;transition:.2s;border:1px solid var(--border)}
+.qa:hover{transform:translateY(-2px);border-color:var(--accent);box-shadow:0 0 18px rgba(0,217,255,.12)}
+.qa i{font-size:22px;color:var(--accent);margin-bottom:10px}
+.qa h3{font-size:18px;margin-bottom:4px}
+.qa p{margin:0;color:var(--muted);font-size:13px}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:11px 16px;border-radius:12px;border:1px solid var(--border);background:var(--card);cursor:pointer;transition:.2s;min-height:44px;font-family:Rajdhani;font-weight:600;font-size:16px}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#041020;border:0}
+.btn.danger{color:var(--err)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn-row{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0}
+.opts label{display:flex;gap:10px;align-items:center;padding:6px 0;color:var(--text);cursor:pointer;font-size:14px}
+.opts label small{color:var(--muted)}
+.opts input[type=checkbox]{width:18px;height:18px;accent-color:var(--accent)}
+.opts .cm{display:flex;gap:12px;flex-wrap:wrap;padding:4px 0 6px 28px;color:var(--muted);font-size:13px}
+.opts .cm label{padding:0}
+.opt-title{font-family:Rajdhani;font-size:18px;margin-bottom:6px}
+.opts select,.settings select{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:8px 10px;margin:4px 0 8px}
+.editors{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.editor-box label.h{display:flex;justify-content:space-between;align-items:center;font-family:Rajdhani;font-size:17px;margin-bottom:8px}
+textarea.code{width:100%;min-height:340px;resize:vertical;background:#050B15;color:#CFE7FF;border:1px solid var(--border);border-radius:14px;padding:14px;font-family:ui-monospace,Consolas,monospace;font-size:13px;line-height:1.5;white-space:pre;overflow:auto}
+[data-theme="light"] textarea.code{background:#F6F9FD;color:#0B1628}
+.drop.over textarea{border-color:var(--accent);box-shadow:0 0 0 2px rgba(0,217,255,.25)}
+.bar{height:8px;border-radius:999px;background:var(--bg2);overflow:hidden;margin-top:10px}
+.bar>div{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));width:0;transition:width .5s}
+.msgs{list-style:none;padding:0;margin:0}
+.msgs li{padding:9px 12px;border-radius:10px;margin-bottom:6px;font-size:14px;border-left:3px solid var(--muted);background:var(--bg2)}
+.msgs li.err{border-color:var(--err)}.msgs li.warn{border-color:#FFC857}.msgs li.ok{border-color:var(--ok)}
+.muted{color:var(--muted)}
+.proj{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid var(--border);flex-wrap:wrap}
+.proj:last-child{border-bottom:0}
+iframe#preview{width:100%;height:420px;border:1px solid var(--border);border-radius:14px;background:#fff}
+.drop-zone{border:1px dashed var(--border);border-radius:14px;padding:10px;margin-bottom:10px;color:var(--muted);font-size:13px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.bottom-nav{display:none}
+#loader{position:fixed;inset:0;background:rgba(3,8,16,.7);backdrop-filter:blur(4px);display:none;place-items:center;z-index:50}
+#loader.show{display:grid}
+#loader .box{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:26px;min-width:260px;text-align:center}
+#loader .spin{width:44px;height:44px;border-radius:50%;border:4px solid var(--border);border-top-color:var(--accent);margin:0 auto 14px;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+#toasts{position:fixed;right:18px;bottom:18px;display:grid;gap:8px;z-index:60}
+.toast{background:var(--card);border:1px solid var(--border);border-left:4px solid var(--accent);padding:12px 16px;border-radius:12px;max-width:340px;box-shadow:0 10px 30px rgba(0,0,0,.35);animation:fade .25s ease}
+.toast.ok{border-left-color:var(--ok)}.toast.err{border-left-color:var(--err)}
+.priv p{margin:0 0 10px;color:var(--muted);line-height:1.6}
+@media (max-width:1000px){.grid-4{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:860px){
+  .app{grid-template-columns:1fr}
+  .sidebar{display:none}
+  main{padding:14px 12px 96px}
+  .editors,.grid-2{grid-template-columns:1fr}
+  .bottom-nav{display:flex;position:fixed;bottom:0;left:0;right:0;background:var(--bg2);border-top:1px solid var(--border);z-index:40;padding:6px 4px;justify-content:space-around}
+  .bottom-nav .nav-btn{flex-direction:column;gap:3px;font-size:11px;padding:6px 4px;width:auto;flex:1;justify-content:center}
+  .bottom-nav .nav-btn i{font-size:18px}
+  .page-head h1{font-size:24px}
+  textarea.code{min-height:240px}
+  .btn{min-height:46px}
+  #toasts{left:12px;right:12px;bottom:84px}
+  .toast{max-width:none}
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+<aside class="sidebar">
+  <div class="brand"><div class="logo"><i class="fa-solid fa-shield-halved"></i></div><b>RX CODE PROTECTOR</b></div>
+  <button class="nav-btn active" data-nav="dashboard"><i class="fa-solid fa-gauge-high"></i>Dashboard</button>
+  <div class="sec">Protect</div>
+  <button class="nav-btn" data-nav="html"><i class="fa-brands fa-html5"></i>HTML Protector</button>
+  <button class="nav-btn" data-nav="js"><i class="fa-brands fa-js"></i>JavaScript Protector</button>
+  <button class="nav-btn" data-nav="css"><i class="fa-brands fa-css3-alt"></i>CSS Protector</button>
+  <button class="nav-btn" data-nav="full"><i class="fa-solid fa-layer-group"></i>Full Protection</button>
+  <div class="sec">Library</div>
+  <button class="nav-btn" data-nav="projects"><i class="fa-solid fa-folder-open"></i>Projects</button>
+  <button class="nav-btn" data-nav="settings"><i class="fa-solid fa-gear"></i>Settings</button>
+  <button class="nav-btn" data-nav="about"><i class="fa-solid fa-circle-info"></i>About</button>
+</aside>
+
+<main>
+
+<!-- DASHBOARD -->
+<section class="view active" id="view-dashboard">
+  <div class="page-head"><h1>Dashboard</h1><span class="tag">LOCAL ONLY</span></div>
+  <div class="grid-4" style="margin-bottom:16px">
+    <div class="card stat"><div class="num" id="stProjects">0</div><div class="lbl">Processed projects</div></div>
+    <div class="card stat"><div class="num" id="stChars">0</div><div class="lbl">Processed characters</div></div>
+    <div class="card stat"><div class="num" id="stSaved">0 B</div><div class="lbl">Net file size saved</div></div>
+    <div class="card stat"><div class="num" id="stLibs">—</div><div class="lbl">Engines loaded</div></div>
+  </div>
+  <h2 style="font-size:20px;margin:6px 0 12px">Quick Actions</h2>
+  <div class="grid-4" style="margin-bottom:16px">
+    <div class="card qa" data-go="html"><i class="fa-brands fa-html5"></i><h3>HTML Protection</h3><p>Minify, clean, and optimize markup.</p></div>
+    <div class="card qa" data-go="js"><i class="fa-brands fa-js"></i><h3>JavaScript Protection</h3><p>Minify, mangle, and obfuscate scripts.</p></div>
+    <div class="card qa" data-go="css"><i class="fa-brands fa-css3-alt"></i><h3>CSS Optimization</h3><p>Compress stylesheets safely.</p></div>
+    <div class="card qa" data-go="full"><i class="fa-solid fa-layer-group"></i><h3>Full HTML Protection</h3><p>Process HTML, CSS, and JS together.</p></div>
+  </div>
+  <div class="card">
+    <h2 style="font-size:20px;margin-bottom:6px">Recent Projects</h2>
+    <div id="recentList" class="muted">No projects yet.</div>
+  </div>
+</section>
+
+<!-- TOOL WORKSPACE (shared by HTML / JS / CSS / Full) -->
+<section class="view" id="view-tool">
+  <div class="page-head"><h1 id="toolTitle">HTML Protector</h1><span class="tag" id="toolTag">BROWSER-SIDE</span></div>
+
+  <div class="grid-2">
+    <div class="card opts">
+      <div class="opt-title">Transformations</div>
+      <label data-for="html full"><input type="checkbox" data-opt="inline" checked> Process inline CSS and JS <small>(preserves order)</small></label>
+      <label data-for="html"><input type="checkbox" data-opt="attrs" checked> Optimize attributes <small>(keeps on*, data-*, aria-*)</small></label>
+      <label data-for="html css"><input type="checkbox" data-opt="comments" checked> Remove comments</label>
+      <label data-for="html js css full"><input type="checkbox" data-opt="minify" checked> Minify whitespace / code</label>
+      <label data-for="html css full"><input type="checkbox" data-opt="keepSpecial" checked> Keep /*! special comments</label>
+      <label data-for="css"><input type="checkbox" data-opt="cssCompress" checked> Compress (zero units, empty rules, final semicolons)</label>
+      <label data-for="html"><input type="checkbox" data-opt="htmlObf"> HTML obfuscation <small>(entity encoding, not encryption)</small></label>
+      <label data-for="js full"><input type="checkbox" data-opt="obf"> JS obfuscation <small>(requires library)</small></label>
+      <div data-for="js full" class="row"><span class="muted" style="font-size:13px">Protection level</span><br>
+        <select data-opt="level">
+          <option value="basic">Basic</option>
+          <option value="medium" selected>Medium</option>
+          <option value="advanced">Advanced (warnings apply)</option>
+        </select>
+      </div>
+      <label data-for="js full"><input type="checkbox" data-opt="mangle"> Variable renaming <small>(top-level names kept)</small></label>
+      <label data-for="js full"><input type="checkbox" data-opt="strings"> String array transformation</label>
+      <label data-for="js full"><input type="checkbox" data-opt="console"> Remove console calls</label>
+      <div data-for="js full" class="cm">
+        <label><input type="checkbox" data-cm="log" checked> log</label>
+        <label><input type="checkbox" data-cm="info"> info</label>
+        <label><input type="checkbox" data-cm="warn"> warn</label>
+        <label><input type="checkbox" data-cm="error"> error</label>
+        <label><input type="checkbox" data-cm="debug"> debug</label>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="opt-title">Live Preview</div>
+      <label class="opts" style="display:flex;gap:10px;align-items:center;margin-bottom:8px" data-for="html full">
+        <input type="checkbox" data-opt="scripts"> Allow scripts in sandboxed preview
+      </label>
+      <p class="muted" style="font-size:13px;margin:0 0 10px">Preview runs in an isolated iframe with no same-origin access. Scripts are off unless you enable them above.</p>
+      <div class="btn-row"><button class="btn" id="btnPreview" data-for="html full"><i class="fa-solid fa-eye"></i> Refresh preview</button></div>
+      <iframe id="preview" sandbox="" title="Preview"></iframe>
+    </div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn primary" id="btnProcess"><i class="fa-solid fa-bolt"></i> Process</button>
+    <button class="btn" id="btnClear"><i class="fa-solid fa-broom"></i> Clear all</button>
+    <button class="btn" id="btnCopy"><i class="fa-solid fa-copy"></i> Copy output</button>
+    <button class="btn" id="btnDownload"><i class="fa-solid fa-download"></i> Download</button>
+    <button class="btn" id="btnReport"><i class="fa-solid fa-file-lines"></i> Download report</button>
+  </div>
+
+  <div class="editors">
+    <div class="editor-box card drop-zone-wrap">
+      <label class="h">Input <span class="muted" id="fileLabel" style="font-size:13px;font-family:Inter">No file</span></label>
+      <div class="drop-zone">
+        <span><i class="fa-solid fa-cloud-arrow-up"></i> Drag &amp; drop .html / .htm (max 2 MB) or</span>
+        <input type="file" id="fileInput" accept=".html,.htm,text/html">
+      </div>
+      <textarea class="code" id="input" spellcheck="false" placeholder="Paste or drop your code here..."></textarea>
+      <div class="muted" id="inSize" style="font-size:12px;margin-top:6px"></div>
+    </div>
+    <div class="editor-box card">
+      <label class="h">Output</label>
+      <textarea class="code" id="output" spellcheck="false" placeholder="Processed output appears here..."></textarea>
+      <div class="muted" id="outSize" style="font-size:12px;margin-top:6px"></div>
+    </div>
+  </div>
+
+  <div class="card" id="sizeCard">
+    <div class="opt-title">Size Comparison</div>
+    <div id="sizeStats" class="muted">Process code to see size statistics.</div>
+    <div class="bar"><div id="sizeBar"></div></div>
+  </div>
+
+  <div class="card">
+    <div class="opt-title">Validation &amp; Messages</div>
+    <ul class="msgs" id="messages"><li class="muted">Nothing to report yet.</li></ul>
+  </div>
+</section>
+
+<!-- PROJECTS -->
+<section class="view" id="view-projects">
+  <div class="page-head"><h1>Projects</h1></div>
+  <div class="card">
+    <p class="muted" style="margin-top:0;font-size:13px">Only project metadata is stored by default. Source code is kept only if you enable "Save source in projects" in Settings.</p>
+    <div id="projectList"></div>
+  </div>
+</section>
+
+<!-- SETTINGS -->
+<section class="view" id="view-settings">
+  <div class="page-head"><h1>Settings</h1></div>
+  <div class="card settings">
+    <div class="opt-title">Appearance</div>
+    <label style="display:block;margin-bottom:6px" class="muted">Theme</label>
+    <select id="themeSelect">
+      <option value="dark">Midnight Pro (dark)</option>
+      <option value="light">Professional light</option>
+    </select>
+  </div>
+  <div class="card">
+    <div class="opt-title">Storage</div>
+    <label style="display:flex;gap:10px;align-items:center;cursor:pointer">
+      <input type="checkbox" id="saveSource" style="width:18px;height:18px;accent-color:var(--accent)">
+      Save source code in recent projects (consent required, off by default)
+    </label>
+    <div class="btn-row">
+      <button class="btn" id="btnResetPrefs"><i class="fa-solid fa-rotate-left"></i> Reset tool options</button>
+      <button class="btn danger" id="btnClearData"><i class="fa-solid fa-trash"></i> Clear stats &amp; projects</button>
+    </div>
+  </div>
+</section>
+
+<!-- ABOUT -->
+<section class="view" id="view-about">
+  <div class="page-head"><h1>About &amp; Privacy</h1></div>
+  <div class="card priv">
+    <h2 style="font-size:20px;margin-bottom:10px">RX CODE PROTECTOR</h2>
+    <p>A browser-side toolkit for minifying and transforming HTML, CSS, and JavaScript. There is no backend, no account, and no database.</p>
+    <p><b>Local processing:</b> Your code is processed inside this browser tab. It is never sent to an external API or uploaded to a server.</p>
+    <p><b>Local storage:</b> Statistics, project metadata, theme, and tool options are kept in your browser's localStorage. Source code is stored only if you opt in under Settings.</p>
+    <p><b>CDN dependencies:</b> Terser (minification) and javascript-obfuscator (JS obfuscation) load from jsDelivr, and icons and fonts load from Cloudflare and Google. If a library fails to load, the affected feature shows an error and your original code is kept.</p>
+    <p><b>Obfuscation is not encryption.</b> Browser-delivered code can always be read, copied, and reverse-engineered. Obfuscation raises the effort required to read the code. It does not prevent theft or guarantee protection.</p>
+    <p><b>Testing:</b> Always test your processed output in the target browsers. Transformations can affect behavior that depends on source layout, timing, or reflection.</p>
+  </div>
+</section>
+
+</main>
+</div>
+
+<nav class="bottom-nav">
+  <button class="nav-btn active" data-nav="dashboard"><i class="fa-solid fa-gauge-high"></i>Home</button>
+  <button class="nav-btn" data-nav="html"><i class="fa-brands fa-html5"></i>HTML</button>
+  <button class="nav-btn" data-nav="js"><i class="fa-brands fa-js"></i>JS</button>
+  <button class="nav-btn" data-nav="css"><i class="fa-brands fa-css3-alt"></i>CSS</button>
+  <button class="nav-btn" data-nav="projects"><i class="fa-solid fa-folder-open"></i>Projects</button>
+</nav>
+
+<div id="loader"><div class="box"><div class="spin"></div><div id="loaderText">Processing…</div><div class="bar"><div id="loaderBar"></div></div></div></div>
+<div id="toasts"></div>
+
+<script>
+/* ============ helpers ============ */
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const enc = new TextEncoder();
+const bytes = s => enc.encode(s).length;
+const fmtB = n => n < 1024 ? n + ' B' : n < 1048576 ? (n/1024).toFixed(1) + ' KB' : (n/1048576).toFixed(2) + ' MB';
+const store = {
+  get(k, d) { try { const v = localStorage.getItem('rx.' + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem('rx.' + k, JSON.stringify(v)); } catch (e) { toast('Local storage unavailable', 'err'); } }
+};
+const TOOLS = { html: 'HTML Protector', js: 'JavaScript Protector', css: 'CSS Protector', full: 'Full Protection' };
+const state = { kind: 'html', busy: false, dirty: false, fileName: '' };
+
+/* ============ UI utilities ============ */
+function toast(msg, type = '') {
+  const t = document.createElement('div');
+  t.className = 'toast ' + type;
+  t.textContent = msg;
+  $('#toasts').appendChild(t);
+  setTimeout(() => t.remove(), 3800);
+}
+function showLoader(on, text = 'Processing…', pct = 0) {
+  $('#loader').classList.toggle('show', on);
+  $('#loaderText').textContent = text;
+  $('#loaderBar').style.width = pct + '%';
+}
+function renderMessages(list) {
+  const ul = $('#messages');
+  ul.innerHTML = '';
+  if (!list.length) { ul.innerHTML = '<li class="ok">No issues found.</li>'; return; }
+  list.forEach(m => {
+    const li = document.createElement('li');
+    li.className = m.type;
+    li.textContent = m.text;
+    ul.appendChild(li);
+  });
+}
+const msg = (type, text) => ({ type, text });
+
+/* ============ options ============ */
+function readOpts() {
+  const o = {};
+  $$('[data-opt]').forEach(el => o[el.dataset.opt] = el.type === 'checkbox' ? el.checked : el.value);
+  o.consoleMethods = $$('[data-cm]:checked').map(e => e.dataset.cm);
+  return o;
+}
+function applyOpts(saved) {
+  if (!saved) return;
+  $$('[data-opt]').forEach(el => {
+    if (!(el.dataset.opt in saved)) return;
+    if (el.type === 'checkbox') el.checked = !!saved[el.dataset.opt];
+    else el.value = saved[el.dataset.opt];
+  });
+  $$('[data-cm]').forEach(el => el.checked = (saved.consoleMethods || ['log']).includes(el.dataset.cm));
+}
+function saveOpts() { store.set('opts', readOpts()); }
+
+/* ============ HTML engine ============ */
+const BLOCK = new Set('address article aside blockquote body br dd details dialog div dl dt fieldset figcaption figure footer form h1 h2 h3 h4 h5 h6 head header hr html li link main meta nav ol p script section style table tbody thead tfoot tr td th title ul option select'.split(' '));
+const isBlk = x => !x || (x.nodeType === 1 && BLOCK.has(x.tagName.toLowerCase())) || x.nodeType === 8;
+
+async function processHTML(src, o, full) {
+  const out = { output: '', warnings: [], errors: [] };
+  const doc = new DOMParser().parseFromString(src, 'text/html');
+  if (!/^\s*<!doctype html/i.test(src)) out.warnings.push(msg('warn', 'No <!DOCTYPE> found; output adds <!DOCTYPE html>.'));
+  if (!doc.querySelector('title')) out.warnings.push(msg('warn', 'No <title> element found.'));
+  const ids = {};
+  doc.querySelectorAll('[id]').forEach(e => ids[e.id] = (ids[e.id] || 0) + 1);
+  Object.entries(ids).filter(([, n]) => n > 1).forEach(([id, n]) => out.warnings.push(msg('warn', `Duplicate id "${id}" appears ${n} times.`)));
+
+  if (o.inline || full) {
+    doc.querySelectorAll('style').forEach(el => {
+      const r = processCSS(el.textContent, o);
+      if (r.error) out.errors.push(msg('err', 'Inline <style>: ' + r.error));
+      el.textContent = r.css;
+    });
+    let idx = 0;
+    for (const el of doc.querySelectorAll('script:not([src])')) {
+      idx++;
+      const type = (el.getAttribute('type') || '').trim().toLowerCase();
+      if (type && !/^(text|application)\/(x-)?(javascript|ecmascript)$|^module$/.test(type)) {
+        out.warnings.push(msg('warn', `Inline script #${idx} has type "${type}" and was left unchanged.`));
+        continue;
+      }
+      try { el.textContent = await processJS(el.textContent, o); }
+      catch (e) { out.errors.push(msg('err', `Inline script #${idx} kept unchanged: ${e.message}`)); }
+    }
+  }
+
+  if (o.comments) {
+    const w = doc.createTreeWalker(doc, NodeFilter.SHOW_COMMENT);
+    const rm = [];
+    while (w.nextNode()) if (!/\[if|\[endif/i.test(w.currentNode.data)) rm.push(w.currentNode);
+    rm.forEach(n => n.remove());
+  }
+
+  if (o.minify) {
+    const w = doc.createTreeWalker(doc.body || doc, NodeFilter.SHOW_TEXT);
+    const texts = [];
+    while (w.nextNode()) texts.push(w.currentNode);
+    texts.forEach(t => {
+      if (t.parentElement && t.parentElement.closest('pre,textarea,script,style,code,xmp')) return;
+      if (/^\s*$/.test(t.data)) {
+        if (isBlk(t.previousSibling) || isBlk(t.nextSibling)) t.remove(); else t.data = ' ';
+      } else t.data = t.data.replace(/\s+/g, ' ');
+    });
+  }
+
+  if (o.attrs) {
+    const BOOL = ['checked', 'disabled', 'selected', 'readonly', 'multiple', 'required', 'hidden', 'autofocus', 'novalidate'];
+    doc.querySelectorAll('*').forEach(el => {
+      const cls = el.getAttribute('class');
+      if (cls !== null) {
+        const c = cls.trim().split(/\s+/).filter(Boolean).join(' ');
+        c ? el.setAttribute('class', c) : el.removeAttribute('class');
+      }
+      const st = el.getAttribute('style');
+      if (st !== null && !st.trim()) el.removeAttribute('style');
+      const tag = el.tagName;
+      if (tag === 'SCRIPT') {
+        if (/javascript|ecmascript/i.test(el.getAttribute('type') || '')) el.removeAttribute('type');
+        el.removeAttribute('language');
+      }
+      if ((tag === 'STYLE' || tag === 'LINK') && /^text\/css$/i.test(el.getAttribute('type') || '')) el.removeAttribute('type');
+      BOOL.forEach(a => { if ((el.getAttribute(a) || '').toLowerCase() === a) el.setAttribute(a, ''); });
+      if (tag === 'FORM' && (el.getAttribute('method') || '').toLowerCase() === 'get') el.removeAttribute('method');
+    });
+  }
+
+  let html = '<!DOCTYPE html>\n' + doc.documentElement.outerHTML;
+  if (o.htmlObf) html = obfuscateMarkup(html);
+  if (o.htmlObf) out.warnings.push(msg('warn', 'HTML obfuscation only changes how text is written. It is not encryption and does not protect the code.'));
+  out.output = html;
+  return out;
+}
+
+function obfuscateMarkup(html) {
+  const parts = html.split(/(<[^>]*>)/);
+  let raw = false, res = '';
+  for (const p of parts) {
+    if (p.startsWith('<')) {
+      if (/^<(script|style)\b/i.test(p)) raw = true;
+      else if (/^<\/(script|style)\b/i.test(p)) raw = false;
+      res += p;
+    } else if (raw || !p) res += p;
+    else res += p.replace(/&#?\w+;|[A-Za-z]/g, m => (m.length > 1 || Math.random() < 0.5) ? m : `&#${m.charCodeAt(0)};`);
+  }
+  return res;
+}
+
+/* ============ CSS engine ============ */
+function checkBraces(src) {
+  const clean = src.replace(/\/\*[\s\S]*?\*\//g, m => m.replace(/[^\n]/g, ' '))
+                   .replace(/"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'/g, '""');
+  const stack = []; let line = 1;
+  for (const ch of clean) {
+    if (ch === '\n') line++;
+    else if (ch === '{') stack.push(line);
+    else if (ch === '}') {
+      if (!stack.length) return `Unexpected "}" on line ${line}.`;
+      stack.pop();
+    }
+  }
+  return stack.length ? `Unclosed "{" opened on line ${stack[stack.length - 1]}.` : null;
+}
+function processCSS(src, o) {
+  const err = checkBraces(src);
+  let s = src;
+  if (o.comments) s = s.replace(/\/\*[\s\S]*?\*\//g, m => (o.keepSpecial && m.startsWith('/*!')) ? m : '');
+  const strings = [];
+  s = s.replace(/"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'/g, m => { strings.push(m); return '\u0000' + (strings.length - 1) + '\u0000'; });
+  if (o.minify || o.cssCompress) {
+    s = s.replace(/\s+/g, ' ')
+         .replace(/\s*([{};,])\s*/g, '$1')
+         .replace(/:\s+/g, ':')
+         .replace(/\s*>\s*/g, '>')
+         .trim();
+  }
+  if (o.cssCompress) {
+    s = s.replace(/;}/g, '}')
+         .replace(/(^|[^\d.])0(?:px|em|rem|pt|pc|in|cm|mm|ex|ch|vw|vh|vmin|vmax)\b/g, '$10');
+    let prev;
+    do { prev = s; s = s.replace(/[^{}]+\{\}/g, ''); } while (s !== prev);
+  }
+  s = s.replace(/\u0000(\d+)\u0000/g, (_, i) => strings[+i]);
+  return { css: s, error: err };
+}
+
+/* ============ JS engine ============ */
+async function processJS(code, o) {
+  if (!/\b(import|export)\b/.test(code)) {
+    try { new Function(code); }
+    catch (e) { throw new Error('Syntax error: ' + e.message); }
+  }
+  let out = code;
+  const cm = (o.console && o.consoleMethods.length) ? o.consoleMethods.map(m => 'console.' + m) : [];
+  if (o.minify || o.mangle || cm.length) {
+    if (typeof Terser === 'undefined') throw new Error('Terser failed to load; minification unavailable.');
+    const r = await Terser.minify(out, {
+      compress: (o.minify || cm.length) ? { passes: 2, pure_funcs: cm.length ? cm : undefined, drop_console: false } : false,
+      mangle: o.mangle ? { toplevel: false } : false,
+      format: { comments: false }
+    });
+    if (r.error) throw new Error(`Line ${r.error.line ?? '?'}: ${r.error.message}`);
+    out = r.code;
+  }
+  if (o.obf) {
+    if (typeof JavaScriptObfuscator === 'undefined') throw new Error('javascript-obfuscator failed to load; obfuscation unavailable.');
+    const L = o.level;
+    const adv = L === 'advanced';
+    const strArr = o.strings || L !== 'basic';
+    out = JavaScriptObfuscator.obfuscate(out, {
+      compact: true,
+      renameGlobals: false,
+      identifierNamesGenerator: 'hexadecimal',
+      controlFlowFlattening: adv,
+      controlFlowFlatteningThreshold: 0.5,
+      deadCodeInjection: adv,
+      deadCodeInjectionThreshold: 0.2,
+      numbersToExpressions: adv,
+      stringArray: strArr,
+      stringArrayEncoding: strArr ? ['base64'] : [],
+      stringArrayThreshold: 0.75,
+      rotateStringArray: true,
+      selfDefending: false,
+      debugProtection: false,
+      disableConsoleOutput: false,
+      unicodeEscapeSequence: false
+    }).getObfuscatedCode();
+  }
+  return out;
+}
+
+/* ============ pipeline ============ */
+async function processFor(kind, src, o, progress) {
+  const notes = [];
+  if (kind === 'html' || kind === 'full') {
+    progress(40, 'Processing document…');
+    const r = await processHTML(src, o, kind === 'full');
+    progress(90, 'Validating output…');
+    const check = new DOMParser().parseFromString(r.output, 'text/html');
+    if (!check.documentElement) r.errors.push(msg('err', 'Generated HTML did not parse cleanly.'));
+    return { output: r.output, messages: [...r.warnings, ...r.errors, ...notes] };
+  }
+  if (kind === 'js') {
+    progress(40, 'Processing JavaScript…');
+    try {
+      const out = await processJS(src, o);
+      if (o.obf && o.level === 'advanced') notes.push(msg('warn', 'Advanced: control-flow flattening and dead-code injection increase size and CPU use. Test thoroughly.'));
+      return { output: out, messages: [msg('ok', 'JavaScript processed successfully.'), ...notes] };
+    } catch (e) {
+      return { output: '', messages: [msg('err', e.message)] };
+    }
+  }
+  if (kind === 'css') {
+    progress(40, 'Processing CSS…');
+    const r = processCSS(src, o);
+    const m = [];
+    if (r.error) m.push(msg('err', r.error)); else m.push(msg('ok', 'CSS structure is valid.'));
+    return { output: r.css, messages: m };
+  }
+  throw new Error('Unknown tool');
+}
+
+async function runProcess() {
+  if (state.busy) { toast('Processing is already running', 'err'); return; }
+  const src = $('#input').value;
+  if (!src.trim()) { toast('Paste or upload code first', 'err'); return; }
+  const o = readOpts();
+  saveOpts();
+  state.busy = true;
+  $('#btnProcess').disabled = true;
+  showLoader(true, 'Validating input…', 10);
+  try {
+    const r = await processFor(state.kind, src, o, (p, t) => showLoader(true, t, p));
+    const hasErr = r.messages.some(m => m.type === 'err');
+    $('#output').value = r.output;
+    renderMessages(r.messages);
+    renderSizes(src, r.output);
+    if (!hasErr || r.output) {
+      state.dirty = true;
+      recordProject(src, r.output);
+      updatePreview();
+    }
+    toast(hasErr ? 'Finished with errors (see messages)' : 'Processing complete', hasErr ? 'err' : 'ok');
+  } catch (e) {
+    toast(e.message, 'err');
+  } finally {
+    state.busy = false;
+    $('#btnProcess').disabled = false;
+    showLoader(false);
+  }
+}
+
+function renderSizes(src, out) {
+  const a = bytes(src), b = bytes(out);
+  const saved = a - b, pct = a ? (saved / a) * 100 : 0;
+  $('#inSize').textContent = `${src.length.toLocaleString()} chars · ${fmtB(a)}`;
+  $('#outSize').textContent = out ? `${out.length.toLocaleString()} chars · ${fmtB(b)}` : '';
+  $('#sizeStats').innerHTML =
+    `Original <b>${fmtB(a)}</b> · Processed <b>${fmtB(b)}</b> · ${saved >= 0 ? 'Saved' : 'Increased by'} <b>${fmtB(Math.abs(saved))}</b> (${pct.toFixed(1)}%)`;
+  $('#sizeBar').style.width = Math.max(0, Math.min(100, (b / Math.max(a, 1)) * 100)) + '%';
+}
+
+/* ============ projects & stats ============ */
+function recordProject(src, out) {
+  const a = bytes(src), b = bytes(out);
+  const rec = {
+    id: Date.now(),
+    name: state.fileName || `Untitled ${TOOLS[state.kind]}`,
+    kind: state.kind,
+    date: new Date().toISOString(),
+    inB: a, outB: b
+  };
+  if (store.get('saveSource', false)) rec.src = src;
+  store.set('projects', [rec, ...store.get('projects', [])].slice(0, 50));
+  const s = store.get('stats', { projects: 0, chars: 0, saved: 0 });
+  s.projects += 1;
+  s.chars += src.length;
+  s.saved += (a - b);
+  store.set('stats', s);
+  renderDashboard();
+}
+
+function renderDashboard() {
+  const s = store.get('stats', { projects: 0, chars: 0, saved: 0 });
+  $('#stProjects').textContent = s.projects.toLocaleString();
+  $('#stChars').textContent = s.chars.toLocaleString();
+  $('#stSaved').textContent = fmtB(Math.max(0, s.saved));
+  $('#stLibs').textContent = (typeof Terser !== 'undefined' ? 1 : 0) + (typeof JavaScriptObfuscator !== 'undefined' ? 1 : 0) + '/2';
+  const list = store.get('projects', []);
+  const box = $('#recentList');
+  if (!list.length) { box.textContent = 'No projects yet.'; return; }
+  box.innerHTML = '';
+  list.slice(0, 5).forEach(p => box.appendChild(projectRow(p, true)));
+}
+
+function projectRow(p, compact) {
+  const d = document.createElement('div');
+  d.className = 'proj';
+  const info = document.createElement('div');
+  const title = document.createElement('div');
+  title.style.fontWeight = '600';
+  title.textContent = p.name;
+  const meta = document.createElement('div');
+  meta.className = 'muted';
+  meta.style.fontSize = '13px';
+  meta.textContent = `${TOOLS[p.kind]} · ${new Date(p.date).toLocaleString()} · ${fmtB(p.inB)} → ${fmtB(p.outB)}`;
+  info.append(title, meta);
+  const acts = document.createElement('div');
+  acts.className = 'btn-row';
+  acts.style.margin = '0';
+  const open = document.createElement('button');
+  open.className = 'btn'; open.innerHTML = '<i class="fa-solid fa-folder-open"></i> Reopen';
+  open.onclick = () => {
+    if (!p.src) { toast('Source was not saved. Enable "Save source in projects" in Settings.', 'err'); return; }
+    $('#input').value = p.src; state.fileName = p.name.replace(/\.html?$/i, ''); state.dirty = false;
+    openTool(p.kind);
+  };
+  const del = document.createElement('button');
+  del.className = 'btn danger'; del.innerHTML = '<i class="fa-solid fa-trash"></i>';
+  del.onclick = () => {
+    store.set('projects', store.get('projects', []).filter(x => x.id !== p.id));
+    renderProjects(); renderDashboard();
+  };
+  acts.append(open, del);
+  if (compact) acts.innerHTML = '';
+  if (compact) acts.append(open);
+  d.append(info, acts);
+  return d;
+}
+
+function renderProjects() {
+  const list = store.get('projects', []);
+  const box = $('#projectList');
+  box.innerHTML = '';
+  if (!list.length) { box.innerHTML = '<div class="muted">No projects yet.</div>'; return; }
+  list.forEach(p => box.appendChild(projectRow(p, false)));
+}
+
+/* ============ input / output actions ============ */
+function openTool(kind) {
+  state.kind = kind;
+  route(kind);
+}
+
+function updatePreview() {
+  const o = readOpts();
+  const frame = $('#preview');
+  frame.setAttribute('sandbox', o.scripts ? 'allow-scripts' : '');
+  const out = $('#output').value;
+  frame.srcdoc = out || '<p style="font-family:sans-serif;padding:16px;color:#555">Process HTML to see the preview.</p>';
+}
+
+function buildReport() {
+  const a = bytes($('#input').value), b = bytes($('#output').value);
+  const pct = a ? ((a - b) / a * 100).toFixed(2) : '0.00';
+  const o = readOpts();
+  const enabled = Object.entries(o).filter(([k, v]) => v === true && k !== 'scripts').map(([k]) => k);
+  return [
+    'RX CODE PROTECTOR — Processing Report',
+    '======================================',
+    'Date: ' + new Date().toLocaleString(),
+    'Tool: ' + TOOLS[state.kind],
+    'File: ' + (state.fileName || '(pasted)'),
+    'Original size: ' + a + ' bytes',
+    'Output size: ' + b + ' bytes',
+    'Reduction: ' + pct + '%',
+    'Enabled options: ' + (enabled.join(', ') || 'none'),
+    'Protection level: ' + (o.obf ? o.level : 'n/a'),
+    '',
+    'Note: obfuscation is not encryption. Browser-delivered code can still be inspected.'
+  ].join('\n');
+}
+
+function download(name, text, type) {
+  const blob = new Blob([text], { type });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = name;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+const safeName = n => (n || 'project').replace(/\.html?$/i, '').replace(/[^a-z0-9_-]+/gi, '_').slice(0, 60) || 'project';
+
+async function copyOutput() {
+  const out = $('#output').value;
+  if (!out) { toast('Nothing to copy', 'err'); return; }
+  try {
+    await navigator.clipboard.writeText(out);
+    toast('Copied to clipboard', 'ok');
+  } catch (e) {
+    $('#output').select();
+    const ok = document.execCommand('copy');
+    toast(ok ? 'Copied to clipboard' : 'Copy failed. Select and copy manually.', ok ? 'ok' : 'err');
+  }
+  state.dirty = false;
+}
+
+function handleFile(file) {
+  if (!file) return;
+  if (!/\.(html?|htm)$/i.test(file.name)) { toast('Only .html and .htm files are supported', 'err'); return; }
+  if (file.size > 2 * 1024 * 1024) { toast('File is larger than 2 MB', 'err'); return; }
+  const reader = new FileReader();
+  reader.onload = () => {
+    $('#input').value = reader.result;
+    state.fileName = file.name.replace(/[<>:"/\\|?*\x00-\x1F]/g, '_');
+    $('#fileLabel').textContent = state.fileName;
+    $('#inSize').textContent = `${reader.result.length.toLocaleString()} chars · ${fmtB(bytes(reader.result))}`;
+    toast('File loaded', 'ok');
+  };
+  reader.onerror = () => toast('Could not read the file', 'err');
+  reader.readAsText(file);
+}
+
+/* ============ routing ============ */
+const TOOL_KINDS = ['html', 'js', 'css', 'full'];
+function route(name) {
+  $$('[data-nav]').forEach(b => b.classList.toggle('active', b.dataset.nav === name));
+  $$('.view').forEach(v => v.classList.remove('active'));
+  if (TOOL_KINDS.includes(name)) {
+    state.kind = name;
+    $('#view-tool').classList.add('active');
+    $('#toolTitle').textContent = TOOLS[name];
+    $('#toolTag').textContent = name === 'full' ? 'HTML + CSS + JS' : 'BROWSER-SIDE';
+    $$('[data-for]').forEach(el => el.hidden = !el.dataset.for.split(' ').includes(name));
+    $$('[data-for]').forEach(el => { if (el.tagName === 'LABEL' || el.tagName === 'DIV') el.style.display = el.hidden ? 'none' : ''; });
+    $('#btnPreview').parentElement.style.display = (name === 'html' || name === 'full') ? '' : 'none';
+    $('#sizeCard').style.display = '';
+    return;
+  }
+  const v = $('#view-' + name);
+  if (v) v.classList.add('active');
+  if (name === 'dashboard') renderDashboard();
+  if (name === 'projects') renderProjects();
+  if (name === 'settings') {
+    $('#themeSelect').value = store.get('theme', 'dark');
+    $('#saveSource').checked = store.get('saveSource', false);
+  }
+  window.scrollTo(0, 0);
+}
+
+/* ============ init ============ */
+function init() {
+  const theme = store.get('theme', 'dark');
+  document.documentElement.dataset.theme = theme;
+  applyOpts(store.get('opts', null));
+
+  $$('[data-nav]').forEach(b => b.addEventListener('click', () => route(b.dataset.nav)));
+  $$('[data-go]').forEach(c => c.addEventListener('click', () => route(c.dataset.go)));
+  $$('[data-opt],[data-cm]').forEach(el => el.addEventListener('change', saveOpts));
+
+  $('#btnProcess').onclick = runProcess;
+  $('#btnPreview').onclick = updatePreview;
+  $('#btnCopy').onclick = copyOutput;
+  $('#btnDownload').onclick = () => {
+    const out = $('#output').value;
+    if (!out) { toast('Nothing to download', 'err'); return; }
+    download(`${safeName(state.fileName)}.${state.kind}.protected.html`, out, 'text/html');
+    state.dirty = false;
+  };
+  $('#btnReport').onclick = () => {
+    if (!$('#output').value) { toast('Process code first', 'err'); return; }
+    download(`${safeName(state.fileName)}.report.txt`, buildReport(), 'text/plain');
+  };
+  $('#btnClear').onclick = () => {
+    const hasWork = $('#input').value || $('#output').value;
+    if (hasWork && state.dirty && !confirm('You have unsaved work. Clear all input and output?')) return;
+    $('#input').value = ''; $('#output').value = '';
+    $('#fileLabel').textContent = 'No file'; state.fileName = ''; state.dirty = false;
+    $('#inSize').textContent = ''; $('#outSize').textContent = '';
+    $('#sizeStats').textContent = 'Process code to see size statistics.';
+    $('#sizeBar').style.width = '0';
+    renderMessages([]);
+    updatePreview();
+  };
+
+  const fileInput = $('#fileInput');
+  fileInput.addEventListener('change', e => handleFile(e.target.files[0]));
+  const dropWrap = document.querySelector('.drop-zone-wrap');
+  ['dragenter', 'dragover'].forEach(ev => dropWrap.addEventListener(ev, e => { e.preventDefault(); dropWrap.classList.add('drop', 'over'); }));
+  ['dragleave', 'drop'].forEach(ev => dropWrap.addEventListener(ev, e => { e.preventDefault(); dropWrap.classList.remove('over'); }));
+  dropWrap.addEventListener('drop', e => handleFile(e.dataTransfer.files[0]));
+
+  $('#themeSelect').onchange = e => { store.set('theme', e.target.value); document.documentElement.dataset.theme = e.target.value; };
+  $('#saveSource').onchange = e => store.set('saveSource', e.target.checked);
+  $('#btnResetPrefs').onclick = () => { localStorage.removeItem('rx.opts'); location.reload(); };
+  $('#btnClearData').onclick = () => {
+    if (!confirm('Clear all statistics and saved projects from this browser?')) return;
+    localStorage.removeItem('rx.stats'); localStorage.removeItem('rx.projects');
+    renderDashboard(); renderProjects(); toast('Local data cleared', 'ok');
+  };
+
+  renderDashboard();
+  route('dashboard');
+  if (typeof Terser === 'undefined' || typeof JavaScriptObfuscator === 'undefined') {
+    toast('Some CDN libraries did not load. Affected features will show errors.', 'err');
+  }
+}
+window.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
