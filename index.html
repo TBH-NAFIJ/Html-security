@@ -1,629 +1,571 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>RX Code Protector</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <style>
-    :root {
-      --bg: #080F1D; --bg2: #101B2D; --card: #142238; --border: #253c5c;
-      --text: #F4F8FF; --sub: #93A4BC; --acc: #00D9FF; --acc2: #398BFF;
-      --ok: #2ecc71; --err: #e74c3c; --radius: 16px;
-    }
-    [data-theme="light"] {
-      --bg: #f0f4fc; --bg2: #ffffff; --card: #ffffff; --border: #d0ddea;
-      --text: #1e2a3a; --sub: #5a6f8c; --acc: #0077cc;
-    }
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; min-height: 100vh; display: flex; flex-direction: column; }
-    .app { display: flex; flex: 1; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RX Code Protector</title>
 
-    /* Sidebar */
-    .sidebar { width: 260px; background: var(--bg2); border-right: 1px solid var(--border); padding: 20px 12px; display: flex; flex-direction: column; gap: 4px; position: sticky; top: 0; height: 100vh; overflow-y: auto; z-index: 100; }
-    .logo { display: flex; align-items: center; gap: 10px; padding: 0 12px 20px; border-bottom: 1px solid var(--border); margin-bottom: 12px; }
-    .logo i { font-size: 28px; color: var(--acc); }
-    .logo b { font-family: 'Rajdhani', sans-serif; font-size: 20px; letter-spacing: 1px; }
-    .logo b span { color: var(--acc); }
-    .nav { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 12px; color: var(--sub); cursor: pointer; font-weight: 500; transition: 0.2s; border: 1px solid transparent; }
-    .nav:hover { background: rgba(0,217,255,0.06); color: var(--text); }
-    .nav.active { background: rgba(0,217,255,0.12); color: var(--acc); border-color: var(--acc); font-weight: 600; }
-    .nav i { width: 22px; text-align: center; }
+<script src="https://cdn.jsdelivr.net/npm/javascript-obfuscator@4.1.1/dist/index.browser.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/csso@5.0.5/dist/csso.min.js"></script>
 
-    /* Main */
-    .main { flex: 1; padding: 24px; overflow-y: auto; height: 100vh; }
-    .topbar { display: none; }
-    .page { display: none; animation: fade 0.25s ease; }
-    .page.active { display: block; }
-    @keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+<style>
+* {
+    box-sizing: border-box;
+}
 
-    /* Cards */
-    .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 16px; }
-    .card-title { font-family: 'Rajdhani', sans-serif; font-size: 18px; font-weight: 600; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center; }
-    .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; }
-    .stat { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; padding: 14px; text-align: center; }
-    .stat b { display: block; font-family: 'Rajdhani', sans-serif; font-size: 26px; color: var(--acc); font-weight: 700; }
-    .stat span { font-size: 12px; color: var(--sub); }
+body {
+    margin: 0;
+    padding: 20px;
+    min-height: 100vh;
+    background: #080f1d;
+    color: #fff;
+    font-family: Inter, Arial, sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
 
-    /* Tool cards */
-    .tools { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; }
-    .tool { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; padding: 16px; cursor: pointer; transition: 0.2s; display: flex; flex-direction: column; gap: 6px; }
-    .tool:hover { border-color: var(--acc); transform: translateY(-2px); }
-    .tool i { font-size: 24px; color: var(--acc); }
-    .tool h4 { font-family: 'Rajdhani', sans-serif; font-size: 16px; }
-    .tool p { font-size: 12px; color: var(--sub); }
+.container {
+    width: 100%;
+    max-width: 480px;
+    background: #111d30;
+    border: 1px solid #243a56;
+    border-radius: 18px;
+    padding: 24px;
+}
 
-    /* Buttons */
-    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 10px 18px; border-radius: 10px; font-family: 'Rajdhani', sans-serif; font-weight: 600; font-size: 15px; cursor: pointer; border: 1px solid var(--border); background: var(--bg2); color: var(--text); transition: 0.2s; }
-    .btn:hover { border-color: var(--acc); background: rgba(0,217,255,0.08); }
-    .btn.primary { background: var(--acc); color: #000; border: none; }
-    .btn.primary:hover { opacity: 0.9; }
-    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
-    .btn-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+h2 {
+    font-family: Rajdhani, Arial, sans-serif;
+    text-align: center;
+    color: #00d9ff;
+    font-size: 30px;
+    margin: 0 0 8px;
+}
 
-    /* Editor */
-    .editor-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-    .editor { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
-    .editor-header { padding: 10px 14px; background: rgba(0,0,0,0.2); border-bottom: 1px solid var(--border); font-size: 13px; font-weight: 500; display: flex; justify-content: space-between; align-items: center; }
-    textarea.code { width: 100%; min-height: 320px; background: var(--bg); color: var(--text); border: none; padding: 14px; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.5; resize: vertical; outline: none; }
-    textarea.code::placeholder { color: var(--sub); opacity: 0.5; }
+.subtitle {
+    text-align: center;
+    color: #9aacc3;
+    font-size: 13px;
+    margin-bottom: 25px;
+}
 
-    /* Settings */
-    .row { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border); gap: 12px; }
-    .row:last-child { border-bottom: none; }
-    .row-label b { font-weight: 500; display: block; }
-    .row-label span { font-size: 12px; color: var(--sub); }
-    .switch { position: relative; width: 44px; height: 24px; flex-shrink: 0; }
-    .switch input { opacity: 0; width: 0; height: 0; }
-    .switch .slider { position: absolute; inset: 0; background: var(--bg); border: 1px solid var(--border); border-radius: 24px; cursor: pointer; transition: 0.2s; }
-    .switch .slider:before { content: ""; position: absolute; height: 16px; width: 16px; left: 3px; top: 3px; background: var(--sub); border-radius: 50%; transition: 0.2s; }
-    .switch input:checked + .slider { background: var(--acc); border-color: var(--acc); }
-    .switch input:checked + .slider:before { transform: translateX(20px); background: #000; }
+.upload {
+    display: block;
+    border: 2px dashed #31516f;
+    border-radius: 13px;
+    padding: 30px 15px;
+    text-align: center;
+    cursor: pointer;
+    background: #0c1728;
+}
 
-    /* Size info */
-    .size-info { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; padding: 12px 16px; margin-top: 16px; display: none; }
-    .size-info.show { display: block; }
-    .size-row { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; font-size: 13px; }
-    .size-row b { color: var(--acc); }
-    .progress { height: 6px; background: var(--bg); border-radius: 3px; overflow: hidden; margin-top: 10px; }
-    .progress-bar { height: 100%; background: var(--acc); width: 0; transition: width 0.4s; }
+.upload strong {
+    display: block;
+    color: #00d9ff;
+    margin-bottom: 8px;
+}
 
-    /* Toast */
-    .toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; }
-    .toast { background: var(--card); border: 1px solid var(--border); border-left: 4px solid var(--acc); border-radius: 10px; padding: 12px 16px; color: var(--text); font-size: 14px; box-shadow: 0 4px 16px rgba(0,0,0,0.4); animation: slide 0.25s ease; max-width: 320px; }
-    .toast.ok { border-left-color: var(--ok); }
-    .toast.err { border-left-color: var(--err); }
-    @keyframes slide { from { transform: translateX(100%); opacity: 0; } to { transform: none; opacity: 1; } }
+.upload span {
+    color: #9aacc3;
+    font-size: 12px;
+}
 
-    /* Spinner */
-    .spin { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.2); border-top-color: var(--acc); border-radius: 50%; animation: rot 0.6s linear infinite; }
-    @keyframes rot { to { transform: rotate(360deg); } }
+input[type=file] {
+    display: none;
+}
 
-    /* Bottom nav & mobile */
-    .bottom-nav { display: none; }
-    @media (max-width: 900px) {
-      .sidebar { position: fixed; left: 0; top: 0; transform: translateX(-100%); transition: 0.3s; }
-      .sidebar.open { transform: none; }
-      .topbar { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: var(--bg2); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 90; }
-      .topbar button { background: none; border: none; color: var(--text); font-size: 22px; cursor: pointer; }
-      .topbar .logo b { font-size: 18px; }
-      .main { padding: 16px; padding-bottom: 80px; height: auto; }
-      .editor-grid { grid-template-columns: 1fr; }
-      .bottom-nav { display: flex; position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg2); border-top: 1px solid var(--border); padding: 6px 8px; justify-content: space-around; z-index: 100; }
-      .bn { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 10px; border-radius: 8px; color: var(--sub); font-size: 10px; cursor: pointer; border: none; background: none; }
-      .bn i { font-size: 18px; }
-      .bn.active { color: var(--acc); background: rgba(0,217,255,0.1); }
-    }
-    .hidden { display: none !important; }
-    .preview-frame { width: 100%; height: 320px; border: 1px solid var(--border); border-radius: 10px; background: #fff; }
-  </style>
+.file-name {
+    margin-top: 15px;
+    color: #00d9ff;
+    font-size: 13px;
+    text-align: center;
+    overflow-wrap: anywhere;
+}
+
+button {
+    width: 100%;
+    border: none;
+    border-radius: 10px;
+    padding: 15px;
+    margin-top: 15px;
+    background: #00c8ed;
+    color: #061321;
+    font-size: 15px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+button:disabled {
+    opacity: .45;
+    cursor: not-allowed;
+}
+
+.download {
+    background: #153d36;
+    color: #4dffc3;
+    display: none;
+}
+
+.status {
+    margin-top: 18px;
+    background: #0a1627;
+    padding: 13px;
+    border-radius: 9px;
+    color: #a9bfd8;
+    font-size: 13px;
+    line-height: 1.7;
+    overflow-wrap: anywhere;
+}
+
+.progress {
+    width: 100%;
+    height: 5px;
+    background: #24364b;
+    border-radius: 10px;
+    margin-top: 15px;
+    overflow: hidden;
+    display: none;
+}
+
+.bar {
+    height: 100%;
+    width: 0%;
+    background: #00d9ff;
+    transition: width .3s;
+}
+
+.notice {
+    color: #8398b2;
+    font-size: 11px;
+    text-align: center;
+    margin-top: 20px;
+    line-height: 1.7;
+}
+</style>
 </head>
+
 <body>
-  <div class="topbar">
-    <button id="hamburger"><i class="fas fa-bars"></i></button>
-    <div class="logo"><b>RX <span>PROTECTOR</span></b></div>
-    <div style="width: 20px;"></div>
-  </div>
 
-  <div class="app">
-    <aside class="sidebar" id="sidebar">
-      <div class="logo"><i class="fas fa-shield-halved"></i><b>RX <span>PROTECTOR</span></b></div>
-      <div class="nav active" data-page="dashboard"><i class="fas fa-grid-2"></i> Dashboard</div>
-      <div class="nav" data-page="htmlProtector"><i class="fab fa-html5"></i> HTML Protector</div>
-      <div class="nav" data-page="jsProtector"><i class="fab fa-js"></i> JS Protector</div>
-      <div class="nav" data-page="cssProtector"><i class="fab fa-css3-alt"></i> CSS Protector</div>
-      <div class="nav" data-page="fullProtection"><i class="fas fa-file-code"></i> Full Protection</div>
-      <div class="nav" data-page="projects"><i class="fas fa-folder"></i> Projects</div>
-      <div class="nav" data-page="settings"><i class="fas fa-gear"></i> Settings</div>
-      <div class="nav" data-page="about"><i class="fas fa-circle-info"></i> About</div>
-    </aside>
+<div class="container">
 
-    <main class="main" id="main">
-      <!-- Dashboard -->
-      <section class="page active" id="page-dashboard">
-        <h2 style="font-family:'Rajdhani';font-size:24px;margin-bottom:16px;">Dashboard</h2>
-        <div class="card">
-          <div class="card-title"><span>Code Statistics</span><i class="fas fa-chart-simple" style="color:var(--acc)"></i></div>
-          <div class="stats">
-            <div class="stat"><b id="sProjects">0</b><span>Projects</span></div>
-            <div class="stat"><b id="sChars">0</b><span>Characters</span></div>
-            <div class="stat"><b id="sSaved">0 B</b><span>Saved</span></div>
-          </div>
-        </div>
-        <div class="card">
-          <div class="card-title"><span>Quick Actions</span><i class="fas fa-bolt" style="color:var(--acc)"></i></div>
-          <div class="tools">
-            <div class="tool" data-goto="htmlProtector"><i class="fab fa-html5"></i><h4>HTML Protection</h4><p>Obfuscate & minify</p></div>
-            <div class="tool" data-goto="jsProtector"><i class="fab fa-js"></i><h4>JS Protection</h4><p>Obfuscate & minify</p></div>
-            <div class="tool" data-goto="cssProtector"><i class="fab fa-css3-alt"></i><h4>CSS Optimization</h4><p>Minify & compress</p></div>
-            <div class="tool" data-goto="fullProtection"><i class="fas fa-file-code"></i><h4>Full Protection</h4><p>Process all together</p></div>
-          </div>
-        </div>
-        <div class="card">
-          <div class="card-title"><span>Recent Projects</span><i class="fas fa-clock-rotate-left" style="color:var(--acc)"></i></div>
-          <div id="recentList"><p style="text-align:center;color:var(--sub);font-size:13px;padding:16px;">No projects yet.</p></div>
-        </div>
-      </section>
+    <h2>RX CODE PROTECTOR</h2>
 
-      <!-- HTML Protector -->
-      <section class="page" id="page-htmlProtector">
-        <h2 style="font-family:'Rajdhani';font-size:24px;margin-bottom:16px;">HTML Protector</h2>
-        <div class="card">
-          <div class="row"><div class="row-label"><b>Minify HTML</b><span>Remove whitespace</span></div><label class="switch"><input type="checkbox" id="htmlMinify" checked><span class="slider"></span></label></div>
-          <div class="row"><div class="row-label"><b>Remove Comments</b><span>Strip HTML comments</span></div><label class="switch"><input type="checkbox" id="htmlComments" checked><span class="slider"></span></label></div>
-          <div class="row"><div class="row-label"><b>Obfuscate HTML</b><span>Encode as entities</span></div><label class="switch"><input type="checkbox" id="htmlObfuscate"><span class="slider"></span></label></div>
-        </div>
-        <div class="btn-row">
-          <button class="btn primary" id="htmlProcess"><i class="fas fa-play"></i> Process</button>
-          <button class="btn" id="htmlUploadBtn"><i class="fas fa-upload"></i> Upload</button>
-          <input type="file" id="htmlFile" accept=".html,.htm" class="hidden">
-          <button class="btn" id="htmlCopy"><i class="fas fa-copy"></i> Copy</button>
-          <button class="btn" id="htmlDownload"><i class="fas fa-download"></i> Download</button>
-        </div>
-        <div class="editor-grid">
-          <div class="editor"><div class="editor-header">Input HTML</div><textarea class="code" id="htmlIn" placeholder="Paste HTML here..."></textarea></div>
-          <div class="editor"><div class="editor-header">Output HTML</div><textarea class="code" id="htmlOut" readonly placeholder="Output appears here..."></textarea></div>
-        </div>
-        <div class="size-info" id="htmlSize">
-          <div class="size-row"><span>Original: <b id="htmlOrig">0 B</b></span><span>Output: <b id="htmlNew">0 B</b></span><span style="color:var(--ok)">Saved: <b id="htmlPct">0%</b></span></div>
-          <div class="progress"><div class="progress-bar" id="htmlBar"></div></div>
-        </div>
-      </section>
+    <div class="subtitle">
+        HTML + CSS + JavaScript Protection Tool
+    </div>
 
-      <!-- JS Protector -->
-      <section class="page" id="page-jsProtector">
-        <h2 style="font-family:'Rajdhani';font-size:24px;margin-bottom:16px;">JavaScript Protector</h2>
-        <div class="card">
-          <div class="row"><div class="row-label"><b>Minify JS</b><span>Compress code</span></div><label class="switch"><input type="checkbox" id="jsMinify" checked><span class="slider"></span></label></div>
-          <div class="row"><div class="row-label"><b>Obfuscate (Mangle)</b><span>Rename variables</span></div><label class="switch"><input type="checkbox" id="jsMangle"><span class="slider"></span></label></div>
-          <div class="row"><div class="row-label"><b>Remove Console</b><span>Strip console.* calls</span></div><label class="switch"><input type="checkbox" id="jsConsole"><span class="slider"></span></label></div>
-        </div>
-        <div class="btn-row">
-          <button class="btn primary" id="jsProcess"><i class="fas fa-play"></i> Process</button>
-          <button class="btn" id="jsCopy"><i class="fas fa-copy"></i> Copy</button>
-          <button class="btn" id="jsDownload"><i class="fas fa-download"></i> Download</button>
-        </div>
-        <div class="editor-grid">
-          <div class="editor"><div class="editor-header">Input JS</div><textarea class="code" id="jsIn" placeholder="Paste JavaScript here..."></textarea></div>
-          <div class="editor"><div class="editor-header">Output JS</div><textarea class="code" id="jsOut" readonly placeholder="Output appears here..."></textarea></div>
-        </div>
-        <div class="size-info" id="jsSize">
-          <div class="size-row"><span>Original: <b id="jsOrig">0 B</b></span><span>Output: <b id="jsNew">0 B</b></span><span style="color:var(--ok)">Saved: <b id="jsPct">0%</b></span></div>
-          <div class="progress"><div class="progress-bar" id="jsBar"></div></div>
-        </div>
-      </section>
+    <label class="upload" for="fileInput">
+        <strong>UPLOAD HTML FILE</strong>
+        <span>Click here to select your .html file</span>
+        <input type="file" id="fileInput" accept=".html,.htm,text/html">
+    </label>
 
-      <!-- CSS Protector -->
-      <section class="page" id="page-cssProtector">
-        <h2 style="font-family:'Rajdhani';font-size:24px;margin-bottom:16px;">CSS Protector</h2>
-        <div class="card">
-          <div class="row"><div class="row-label"><b>Minify CSS</b><span>Compress styles</span></div><label class="switch"><input type="checkbox" id="cssMinify" checked><span class="slider"></span></label></div>
-          <div class="row"><div class="row-label"><b>Remove Comments</b><span>Strip CSS comments</span></div><label class="switch"><input type="checkbox" id="cssComments" checked><span class="slider"></span></label></div>
-          <div class="row"><div class="row-label"><b>Optimize</b><span>Advanced optimization</span></div><label class="switch"><input type="checkbox" id="cssOptimize"><span class="slider"></span></label></div>
-        </div>
-        <div class="btn-row">
-          <button class="btn primary" id="cssProcess"><i class="fas fa-play"></i> Process</button>
-          <button class="btn" id="cssCopy"><i class="fas fa-copy"></i> Copy</button>
-          <button class="btn" id="cssDownload"><i class="fas fa-download"></i> Download</button>
-        </div>
-        <div class="editor-grid">
-          <div class="editor"><div class="editor-header">Input CSS</div><textarea class="code" id="cssIn" placeholder="Paste CSS here..."></textarea></div>
-          <div class="editor"><div class="editor-header">Output CSS</div><textarea class="code" id="cssOut" readonly placeholder="Output appears here..."></textarea></div>
-        </div>
-        <div class="size-info" id="cssSize">
-          <div class="size-row"><span>Original: <b id="cssOrig">0 B</b></span><span>Output: <b id="cssNew">0 B</b></span><span style="color:var(--ok)">Saved: <b id="cssPct">0%</b></span></div>
-          <div class="progress"><div class="progress-bar" id="cssBar"></div></div>
-        </div>
-      </section>
+    <div class="file-name" id="fileName">
+        No file selected
+    </div>
 
-      <!-- Full Protection -->
-      <section class="page" id="page-fullProtection">
-        <h2 style="font-family:'Rajdhani';font-size:24px;margin-bottom:16px;">Full Protection</h2>
-        <div class="card">
-          <div class="row">
-            <div class="row-label"><b>Level</b><span>Transformation strength</span></div>
-            <select id="fullLevel" style="background:var(--bg2);color:var(--text);border:1px solid var(--border);padding:8px 12px;border-radius:8px;font-family:inherit;">
-              <option value="basic">Basic</option>
-              <option value="medium" selected>Medium</option>
-              <option value="advanced">Advanced</option>
-            </select>
-          </div>
-          <div class="row"><div class="row-label"><b>Inline JS</b><span>Process inline scripts</span></div><label class="switch"><input type="checkbox" id="fullInlineJS" checked><span class="slider"></span></label></div>
-          <div class="row"><div class="row-label"><b>Inline CSS</b><span>Process inline styles</span></div><label class="switch"><input type="checkbox" id="fullInlineCSS" checked><span class="slider"></span></label></div>
-        </div>
-        <div class="btn-row">
-          <button class="btn primary" id="fullProcess"><i class="fas fa-play"></i> Process</button>
-          <button class="btn" id="fullCopy"><i class="fas fa-copy"></i> Copy</button>
-          <button class="btn" id="fullDownload"><i class="fas fa-download"></i> Download</button>
-          <button class="btn" id="fullPreview"><i class="fas fa-eye"></i> Preview</button>
-        </div>
-        <div class="editor-grid">
-          <div class="editor"><div class="editor-header">Input HTML</div><textarea class="code" id="fullIn" placeholder="Paste full HTML here..."></textarea></div>
-          <div class="editor"><div class="editor-header">Output HTML</div><textarea class="code" id="fullOut" readonly placeholder="Output appears here..."></textarea></div>
-        </div>
-        <div class="size-info" id="fullSize">
-          <div class="size-row"><span>Original: <b id="fullOrig">0 B</b></span><span>Output: <b id="fullNew">0 B</b></span><span style="color:var(--ok)">Saved: <b id="fullPct">0%</b></span></div>
-          <div class="progress"><div class="progress-bar" id="fullBar"></div></div>
-        </div>
-        <div class="card hidden" id="previewCard">
-          <div class="card-title"><span>Live Preview (Sandboxed)</span><button class="btn" id="closePreview" style="padding:4px 10px;font-size:12px;">Close</button></div>
-          <iframe class="preview-frame" id="previewFrame" sandbox="allow-scripts allow-same-origin allow-forms"></iframe>
-        </div>
-      </section>
+    <button id="protectBtn" disabled>
+        PROTECT CODE
+    </button>
 
-      <!-- Projects -->
-      <section class="page" id="page-projects">
-        <h2 style="font-family:'Rajdhani';font-size:24px;margin-bottom:16px;">Projects</h2>
-        <div class="card" id="projectsList"><p style="text-align:center;color:var(--sub);font-size:13px;padding:16px;">No projects yet.</p></div>
-      </section>
+    <div class="progress" id="progress">
+        <div class="bar" id="bar"></div>
+    </div>
 
-      <!-- Settings -->
-      <section class="page" id="page-settings">
-        <h2 style="font-family:'Rajdhani';font-size:24px;margin-bottom:16px;">Settings</h2>
-        <div class="card">
-          <div class="row"><div class="row-label"><b>Theme</b><span>Dark / Light</span></div>
-            <select id="theme" style="background:var(--bg2);color:var(--text);border:1px solid var(--border);padding:8px 12px;border-radius:8px;font-family:inherit;">
-              <option value="dark">Midnight Pro</option><option value="light">Light</option>
-            </select>
-          </div>
-        </div>
-        <div class="card">
-          <div class="card-title">Data</div>
-          <div class="btn-row">
-            <button class="btn" id="clearProjects"><i class="fas fa-trash"></i> Clear Projects</button>
-            <button class="btn" id="clearStats"><i class="fas fa-chart-simple"></i> Reset Stats</button>
-          </div>
-        </div>
-      </section>
+    <div class="status" id="status">
+        Waiting for HTML file...
+    </div>
 
-      <!-- About -->
-      <section class="page" id="page-about">
-        <h2 style="font-family:'Rajdhani';font-size:24px;margin-bottom:16px;">About</h2>
-        <div class="card">
-          <h3 style="font-family:'Rajdhani';margin-bottom:8px;">RX Code Protector</h3>
-          <p style="color:var(--sub);font-size:14px;margin-bottom:12px;">Professional code transformation tool. All processing happens locally in your browser — your code never leaves your device.</p>
-          <p style="color:var(--sub);font-size:14px;margin-bottom:12px;"><b>Important:</b> Obfuscation is not encryption. Browser-delivered code can still be inspected. This tool does not guarantee 100% theft prevention.</p>
-          <p style="color:var(--sub);font-size:13px;">Powered by Terser, html-minifier-terser, clean-css.</p>
-        </div>
-      </section>
-    </main>
-  </div>
+    <button class="download" id="downloadBtn">
+        DOWNLOAD PROTECTED HTML
+    </button>
 
-  <!-- Bottom Nav -->
-  <nav class="bottom-nav">
-    <button class="bn active" data-page="dashboard"><i class="fas fa-grid-2"></i>Home</button>
-    <button class="bn" data-page="htmlProtector"><i class="fab fa-html5"></i>HTML</button>
-    <button class="bn" data-page="jsProtector"><i class="fab fa-js"></i>JS</button>
-    <button class="bn" data-page="cssProtector"><i class="fab fa-css3-alt"></i>CSS</button>
-    <button class="bn" data-page="fullProtection"><i class="fas fa-file-code"></i>Full</button>
-  </nav>
+    <div class="notice">
+        RX CODE PROTECTOR<br>
+        Browser-side processing · No source upload
+    </div>
 
-  <div class="toast-container" id="toasts"></div>
+</div>
 
-  <!-- CDN Libraries (correct versions) -->
-  <script src="https://cdn.jsdelivr.net/npm/terser@5.19.2/dist/bundle.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/html-minifier-terser@7.2.0/dist/htmlminifier.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/clean-css@5.3.2/dist/clean-css.min.js"></script>
+<script>
+"use strict";
 
-  <script>
-  (function() {
-    "use strict";
+const fileInput = document.getElementById("fileInput");
+const fileName = document.getElementById("fileName");
+const protectBtn = document.getElementById("protectBtn");
+const downloadBtn = document.getElementById("downloadBtn");
+const statusBox = document.getElementById("status");
+const progress = document.getElementById("progress");
+const bar = document.getElementById("bar");
 
-    const $ = s => document.querySelector(s);
-    const $$ = s => Array.from(document.querySelectorAll(s));
-    const KEY = 'rx_protector_v2';
-    let data = loadData();
+let originalFileName = "";
+let originalCode = "";
+let protectedCode = "";
+let busy = false;
 
-    function loadData() {
-      try { return JSON.parse(localStorage.getItem(KEY)) || { projects: [], stats: { projects: 0, chars: 0, saved: 0 }, settings: {} }; }
-      catch { return { projects: [], stats: { projects: 0, chars: 0, saved: 0 }, settings: {} }; }
-    }
-    function save() { try { localStorage.setItem(KEY, JSON.stringify(data)); } catch(e){} }
+function updateStatus(message) {
+    statusBox.textContent = message;
+}
 
-    function toast(msg, type) {
-      const c = $('#toasts');
-      const t = document.createElement('div');
-      t.className = 'toast ' + (type || '');
-      t.textContent = msg;
-      c.appendChild(t);
-      setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 300); }, 2800);
-    }
-    function fmt(b) {
-      if (!b) return '0 B';
-      const u = ['B','KB','MB']; let i = 0;
-      while (b >= 1024 && i < 2) { b /= 1024; i++; }
-      return b.toFixed(1) + ' ' + u[i];
+function setProgress(value) {
+    bar.style.width = value + "%";
+}
+
+fileInput.addEventListener("change", async function () {
+
+    const file = this.files[0];
+
+    protectedCode = "";
+    downloadBtn.style.display = "none";
+
+    if (!file) {
+        originalCode = "";
+        protectBtn.disabled = true;
+        fileName.textContent = "No file selected";
+        return;
     }
 
-    // ---- Nav ----
-    function go(page) {
-      $$('.page').forEach(p => p.classList.remove('active'));
-      const el = $('#page-' + page);
-      if (el) el.classList.add('active');
-      $$('.nav').forEach(n => n.classList.toggle('active', n.dataset.page === page));
-      $$('.bn').forEach(n => n.classList.toggle('active', n.dataset.page === page));
-      $('#sidebar').classList.remove('open');
+    if (!/\.(html|htm)$/i.test(file.name)) {
+        originalCode = "";
+        protectBtn.disabled = true;
+        fileName.textContent = "Invalid file";
+        updateStatus("Please upload a valid HTML file.");
+        this.value = "";
+        return;
     }
-    $$('.nav').forEach(n => n.addEventListener('click', () => go(n.dataset.page)));
-    $$('.bn').forEach(n => n.addEventListener('click', () => go(n.dataset.page)));
-    $$('.tool[data-goto]').forEach(t => t.addEventListener('click', () => go(t.dataset.goto)));
-    $('#hamburger').addEventListener('click', () => $('#sidebar').classList.toggle('open'));
 
-    // ---- Stats ----
-    function updateStats() {
-      $('#sProjects').textContent = data.stats.projects || 0;
-      $('#sChars').textContent = (data.stats.chars || 0).toLocaleString();
-      $('#sSaved').textContent = fmt(data.stats.saved || 0);
+    if (file.size > 10 * 1024 * 1024) {
+        originalCode = "";
+        protectBtn.disabled = true;
+        updateStatus("File is too large. Maximum size is 10 MB.");
+        this.value = "";
+        return;
     }
-    function addProject(name, orig, proc, type) {
-      data.stats.projects++;
-      data.stats.chars += orig;
-      data.stats.saved += Math.max(0, orig - proc);
-      data.projects.unshift({ name, date: new Date().toISOString(), orig, proc, type });
-      if (data.projects.length > 20) data.projects.length = 20;
-      save(); updateStats(); renderProjects();
-    }
-    function renderProjects() {
-      const list = data.projects;
-      const html = list.length === 0
-        ? '<p style="text-align:center;color:var(--sub);font-size:13px;padding:16px;">No projects yet.</p>'
-        : list.map((p, i) => {
-            const d = new Date(p.date).toLocaleString();
-            return `<div class="row"><div><b>${esc(p.name)}</b><br><span style="font-size:12px;color:var(--sub)">${d} • ${p.type}</span></div>
-              <div style="display:flex;gap:8px;align-items:center"><span style="font-size:12px">${fmt(p.orig)} → ${fmt(p.proc)}</span>
-              <button class="btn" style="padding:4px 8px;font-size:11px" onclick="delProject(${i})"><i class="fas fa-trash"></i></button></div></div>`;
-          }).join('');
-      $('#recentList').innerHTML = html;
-      $('#projectsList').innerHTML = html;
-    }
-    window.delProject = function(i) {
-      data.projects.splice(i, 1); save(); renderProjects(); toast('Deleted', 'ok');
-    };
-    function esc(s) { return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 
-    // ---- Processing ----
-    async function minifyHTML(code, removeComments) {
-      if (typeof HTMLMinifier === 'undefined') throw new Error('HTMLMinifier not loaded');
-      return await HTMLMinifier.minify(code, {
-        collapseWhitespace: true,
-        removeComments: removeComments,
-        removeOptionalTags: false,
-        removeAttributeQuotes: false,
-        keepClosingSlash: true,
-        minifyJS: false, minifyCSS: false
-      });
-    }
-    function obfuscateHTML(code) {
-      return code.replace(/[a-zA-Z]/g, ch => '&#' + ch.charCodeAt(0) + ';');
-    }
-    async function processJS(code, opts) {
-      if (typeof Terser === 'undefined') throw new Error('Terser not loaded');
-      const cfg = {
-        compress: { drop_console: !!opts.removeConsole, drop_debugger: !!opts.removeConsole },
-        mangle: opts.mangle ? { toplevel: true } : false,
-        format: { comments: false }
-      };
-      if (!opts.minify) { cfg.compress = false; cfg.mangle = false; }
-      const res = await Terser.minify(code, cfg);
-      if (res.error) throw res.error;
-      return res.code || code;
-    }
-    function processCSS(code, opts) {
-      if (typeof CleanCSS === 'undefined') throw new Error('CleanCSS not loaded');
-      const clean = new CleanCSS({
-        level: opts.optimize ? 2 : 1,
-        format: opts.minify ? 'minify' : undefined,
-        removeComments: opts.removeComments !== false
-      });
-      const out = clean.minify(code);
-      if (out.errors && out.errors.length) throw new Error(out.errors.join('; '));
-      return out.styles || code;
-    }
-    async function fullProcess(code, level) {
-      const doc = new DOMParser().parseFromString(code, 'text/html');
-      if ($('#fullInlineCSS').checked) {
-        for (const s of doc.querySelectorAll('style')) {
-          if (s.textContent.trim()) {
-            try { s.textContent = processCSS(s.textContent, { minify: level !== 'basic', removeComments: level !== 'basic', optimize: level === 'advanced' }); } catch(e){}
-          }
+    try {
+        originalCode = await file.text();
+        originalFileName = file.name;
+
+        if (!originalCode.trim()) {
+            throw new Error("The HTML file is empty.");
         }
-      }
-      if ($('#fullInlineJS').checked) {
-        for (const s of doc.querySelectorAll('script:not([src])')) {
-          if (s.textContent.trim()) {
-            try { s.textContent = await processJS(s.textContent, { minify: level !== 'basic', mangle: level !== 'basic', removeConsole: level === 'advanced' }); } catch(e){}
-          }
+
+        fileName.textContent = file.name;
+        protectBtn.disabled = false;
+
+        updateStatus(
+            "File loaded successfully.\n" +
+            "Original size: " + formatSize(file.size) +
+            "\nReady to protect."
+        );
+
+    } catch (error) {
+        originalCode = "";
+        protectBtn.disabled = true;
+        updateStatus("File reading failed: " + error.message);
+    }
+});
+
+function formatSize(bytes) {
+    if (bytes < 1024) return bytes + " Bytes";
+    if (bytes < 1024 * 1024) {
+        return (bytes / 1024).toFixed(2) + " KB";
+    }
+    return (bytes / (1024 * 1024)).toFixed(2) + " MB";
+}
+
+function isExecutableScript(script) {
+
+    const type = (
+        script.getAttribute("type") || ""
+    ).trim().toLowerCase();
+
+    return (
+        type === "" ||
+        type === "module" ||
+        type === "text/javascript" ||
+        type === "application/javascript" ||
+        type === "application/ecmascript" ||
+        type === "text/ecmascript"
+    );
+}
+
+function removeHTMLComments(root) {
+
+    const walker = document.createTreeWalker(
+        root,
+        NodeFilter.SHOW_COMMENT
+    );
+
+    const comments = [];
+    let node;
+
+    while ((node = walker.nextNode())) {
+        comments.push(node);
+    }
+
+    for (const comment of comments) {
+        const value = comment.nodeValue || "";
+
+        // Preserve conditional comments for compatibility.
+        if (/^\s*\[if\b/i.test(value)) continue;
+
+        comment.remove();
+    }
+}
+
+function processHTML(source) {
+
+    return new Promise(async function (resolve, reject) {
+
+        try {
+
+            if (
+                typeof JavaScriptObfuscator === "undefined" ||
+                typeof csso === "undefined"
+            ) {
+                throw new Error(
+                    "Protection libraries could not load. Check your internet connection and reload."
+                );
+            }
+
+            const parser = new DOMParser();
+
+            const doc = parser.parseFromString(
+                source,
+                "text/html"
+            );
+
+            if (!doc.documentElement) {
+                throw new Error("Invalid HTML document.");
+            }
+
+            const scripts = Array.from(
+                doc.querySelectorAll("script")
+            );
+
+            const styles = Array.from(
+                doc.querySelectorAll("style")
+            );
+
+            const total = scripts.length + styles.length + 2;
+            let completed = 0;
+
+            function advance() {
+                completed++;
+                setProgress(
+                    Math.min(95, Math.round(completed / total * 100))
+                );
+            }
+
+            // 1. Process inline CSS.
+            for (const style of styles) {
+
+                try {
+
+                    const css = style.textContent || "";
+
+                    if (css.trim()) {
+
+                        const result = csso.minify(css, {
+                            restructure: false,
+                            comments: true
+                        });
+
+                        style.textContent = result.css;
+                    }
+
+                } catch (error) {
+                    console.warn("CSS processing skipped:", error);
+                }
+
+                advance();
+            }
+
+            // 2. Process inline JavaScript.
+            for (const script of scripts) {
+
+                try {
+
+                    const hasExternalSource =
+                        script.hasAttribute("src");
+
+                    if (
+                        !hasExternalSource &&
+                        isExecutableScript(script)
+                    ) {
+
+                        const js = script.textContent || "";
+
+                        if (js.trim()) {
+
+                            const result =
+                                JavaScriptObfuscator.obfuscate(
+                                    js,
+                                    {
+                                        compact: true,
+                                        simplify: true,
+                                        identifierNamesGenerator: "hexadecimal",
+                                        renameGlobals: false,
+                                        stringArray: true,
+                                        stringArrayThreshold: 0.5,
+                                        stringArrayEncoding: [],
+                                        controlFlowFlattening: false,
+                                        deadCodeInjection: false,
+                                        disableConsoleOutput: false,
+                                        selfDefending: false,
+                                        debugProtection: false
+                                    }
+                                );
+
+                            script.textContent = result.getObfuscatedCode();
+                        }
+                    }
+
+                } catch (error) {
+
+                    console.warn(
+                        "JavaScript processing skipped:",
+                        error
+                    );
+                }
+
+                advance();
+            }
+
+            // 3. Remove ordinary HTML comments.
+            removeHTMLComments(doc);
+
+            advance();
+
+            // 4. Generate final document.
+            const doctype = doc.doctype
+                ? "<!DOCTYPE " + doc.doctype.name + ">"
+                : "<!DOCTYPE html>";
+
+            const output =
+                doctype + "\n" +
+                doc.documentElement.outerHTML;
+
+            if (!output || output.length === 0) {
+                throw new Error("Could not generate protected HTML.");
+            }
+
+            advance();
+
+            resolve(output);
+
+        } catch (error) {
+            reject(error);
         }
-      }
-      let html = new XMLSerializer().serializeToString(doc);
-      if (level !== 'basic') html = await minifyHTML(html, true);
-      if (level === 'medium' || level === 'advanced') html = obfuscateHTML(html);
-      return html;
+
+    });
+}
+
+protectBtn.addEventListener("click", async function () {
+
+    if (busy || !originalCode) return;
+
+    busy = true;
+    protectBtn.disabled = true;
+    downloadBtn.style.display = "none";
+    progress.style.display = "block";
+    setProgress(5);
+
+    updateStatus("Protection started...\nPlease wait.");
+
+    try {
+
+        const start = performance.now();
+
+        protectedCode = await processHTML(originalCode);
+
+        const elapsed = (
+            performance.now() - start
+        ).toFixed(0);
+
+        const originalSize = new Blob(
+            [originalCode]
+        ).size;
+
+        const finalSize = new Blob(
+            [protectedCode]
+        ).size;
+
+        const difference = originalSize - finalSize;
+
+        const percentage = originalSize > 0
+            ? ((difference / originalSize) * 100).toFixed(2)
+            : "0.00";
+
+        setProgress(100);
+
+        updateStatus(
+            "PROTECTION COMPLETED!\n\n" +
+            "Original Size: " + formatSize(originalSize) + "\n" +
+            "Protected Size: " + formatSize(finalSize) + "\n" +
+            "Size Difference: " + formatSize(Math.abs(difference)) + "\n" +
+            "Size Change: " + percentage + "%\n" +
+            "Processing Time: " + elapsed + " ms\n\n" +
+            "Your protected HTML is ready to download."
+        );
+
+        downloadBtn.style.display = "block";
+
+    } catch (error) {
+
+        protectedCode = "";
+
+        updateStatus(
+            "PROTECTION FAILED!\n\n" +
+            (error.message || "Unknown processing error.")
+        );
+
+    } finally {
+
+        busy = false;
+        protectBtn.disabled = !originalCode;
+
     }
 
-    // ---- Helper to update size ----
-    function updateSize(prefix, orig, proc) {
-      const o = new Blob([orig]).size;
-      const p = new Blob([proc]).size;
-      const saved = Math.max(0, o - p);
-      const pct = o > 0 ? Math.round(saved / o * 100) : 0;
-      $('#'+prefix+'Size').classList.add('show');
-      $('#'+prefix+'Orig').textContent = fmt(o);
-      $('#'+prefix+'New').textContent = fmt(p);
-      $('#'+prefix+'Pct').textContent = pct + '%';
-      $('#'+prefix+'Bar').style.width = pct + '%';
-      return { o, p };
-    }
+});
 
-    function busy(btn, on, label) {
-      if (on) { btn.disabled = true; btn._orig = btn.innerHTML; btn.innerHTML = '<span class="spin"></span> Processing...'; }
-      else { btn.disabled = false; btn.innerHTML = btn._orig || label; }
-    }
+downloadBtn.addEventListener("click", function () {
 
-    // ---- HTML ----
-    $('#htmlProcess').addEventListener('click', async () => {
-      const inp = $('#htmlIn').value.trim();
-      if (!inp) return toast('Please enter HTML code', 'err');
-      const btn = $('#htmlProcess');
-      busy(btn, true);
-      try {
-        let out = inp;
-        const minify = $('#htmlMinify').checked, comments = $('#htmlComments').checked, obf = $('#htmlObfuscate').checked;
-        if (minify || comments) out = await minifyHTML(out, comments);
-        if (obf) out = obfuscateHTML(out);
-        $('#htmlOut').value = out;
-        const sizes = updateSize('html', inp, out);
-        addProject('HTML Project', sizes.o, sizes.p, 'HTML');
-        toast('HTML processed successfully', 'ok');
-      } catch(e) { toast('Error: ' + e.message, 'err'); }
-      finally { busy(btn, false, '<i class="fas fa-play"></i> Process'); }
-    });
-    $('#htmlUploadBtn').addEventListener('click', () => $('#htmlFile').click());
-    $('#htmlFile').addEventListener('change', e => {
-      const f = e.target.files[0]; if (!f) return;
-      if (!f.name.match(/\.(html?|htm)$/i)) return toast('Invalid file type', 'err');
-      const r = new FileReader();
-      r.onload = ev => { $('#htmlIn').value = ev.target.result; toast('Loaded ' + f.name, 'ok'); };
-      r.onerror = () => toast('Read error', 'err');
-      r.readAsText(f);
-    });
-    $('#htmlCopy').addEventListener('click', () => {
-      const o = $('#htmlOut').value; if (!o) return toast('No output', 'err');
-      navigator.clipboard.writeText(o).then(() => toast('Copied!', 'ok')).catch(() => toast('Copy failed', 'err'));
-    });
-    $('#htmlDownload').addEventListener('click', () => download($('#htmlOut').value, 'html', 'text/html'));
+    if (!protectedCode) return;
 
-    // ---- JS ----
-    $('#jsProcess').addEventListener('click', async () => {
-      const inp = $('#jsIn').value.trim();
-      if (!inp) return toast('Please enter JS code', 'err');
-      const btn = $('#jsProcess'); busy(btn, true);
-      try {
-        const out = await processJS(inp, {
-          minify: $('#jsMinify').checked,
-          mangle: $('#jsMangle').checked,
-          removeConsole: $('#jsConsole').checked
-        });
-        $('#jsOut').value = out;
-        const s = updateSize('js', inp, out);
-        addProject('JS Project', s.o, s.p, 'JavaScript');
-        toast('JS processed', 'ok');
-      } catch(e) { toast('Error: ' + e.message, 'err'); }
-      finally { busy(btn, false, '<i class="fas fa-play"></i> Process'); }
-    });
-    $('#jsCopy').addEventListener('click', () => {
-      const o = $('#jsOut').value; if (!o) return toast('No output', 'err');
-      navigator.clipboard.writeText(o).then(() => toast('Copied!', 'ok')).catch(() => toast('Copy failed', 'err'));
-    });
-    $('#jsDownload').addEventListener('click', () => download($('#jsOut').value, 'js', 'text/javascript'));
+    const blob = new Blob(
+        [protectedCode],
+        { type: "text/html;charset=utf-8" }
+    );
 
-    // ---- CSS ----
-    $('#cssProcess').addEventListener('click', () => {
-      const inp = $('#cssIn').value.trim();
-      if (!inp) return toast('Please enter CSS code', 'err');
-      const btn = $('#cssProcess'); busy(btn, true);
-      try {
-        const out = processCSS(inp, {
-          minify: $('#cssMinify').checked,
-          removeComments: $('#cssComments').checked,
-          optimize: $('#cssOptimize').checked
-        });
-        $('#cssOut').value = out;
-        const s = updateSize('css', inp, out);
-        addProject('CSS Project', s.o, s.p, 'CSS');
-        toast('CSS processed', 'ok');
-      } catch(e) { toast('Error: ' + e.message, 'err'); }
-      finally { busy(btn, false, '<i class="fas fa-play"></i> Process'); }
-    });
-    $('#cssCopy').addEventListener('click', () => {
-      const o = $('#cssOut').value; if (!o) return toast('No output', 'err');
-      navigator.clipboard.writeText(o).then(() => toast('Copied!', 'ok')).catch(() => toast('Copy failed', 'err'));
-    });
-    $('#cssDownload').addEventListener('click', () => download($('#cssOut').value, 'css', 'text/css'));
+    const url = URL.createObjectURL(blob);
 
-    // ---- Full ----
-    $('#fullProcess').addEventListener('click', async () => {
-      const inp = $('#fullIn').value.trim();
-      if (!inp) return toast('Please enter HTML', 'err');
-      const btn = $('#fullProcess'); busy(btn, true);
-      try {
-        const out = await fullProcess(inp, $('#fullLevel').value);
-        $('#fullOut').value = out;
-        const s = updateSize('full', inp, out);
-        addProject('Full Protection', s.o, s.p, 'Full HTML');
-        toast('Full processed', 'ok');
-      } catch(e) { toast('Error: ' + e.message, 'err'); }
-      finally { busy(btn, false, '<i class="fas fa-play"></i> Process'); }
-    });
-    $('#fullCopy').addEventListener('click', () => {
-      const o = $('#fullOut').value; if (!o) return toast('No output', 'err');
-      navigator.clipboard.writeText(o).then(() => toast('Copied!', 'ok')).catch(() => toast('Copy failed', 'err'));
-    });
-    $('#fullDownload').addEventListener('click', () => download($('#fullOut').value, 'html', 'text/html'));
-    $('#fullPreview').addEventListener('click', () => {
-      const o = $('#fullOut').value; if (!o) return toast('Process first', 'err');
-      $('#previewCard').classList.remove('hidden');
-      $('#previewFrame').srcdoc = o;
-      toast('Preview loaded', 'ok');
-    });
-    $('#closePreview').addEventListener('click', () => {
-      $('#previewCard').classList.add('hidden');
-      $('#previewFrame').srcdoc = '';
-    });
+    const link = document.createElement("a");
 
-    function download(content, ext, mime) {
-      if (!content) return toast('No output', 'err');
-      const blob = new Blob([content], { type: mime });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url; a.download = 'rx-protected-' + Date.now() + '.' + ext;
-      a.click(); URL.revokeObjectURL(url);
-      toast('Download started', 'ok');
-    }
+    const baseName = originalFileName
+        .replace(/\.(html|htm)$/i, "");
 
-    // ---- Theme ----
-    function applyTheme(t) {
-      document.documentElement.setAttribute('data-theme', t);
-      $('#theme').value = t;
-      localStorage.setItem('rx_theme', t);
-    }
-    $('#theme').addEventListener('change', () => applyTheme($('#theme').value));
-    applyTheme(localStorage.getItem('rx_theme') || 'dark');
+    link.href = url;
+    link.download = baseName + "-protected.html";
 
-    // ---- Settings ----
-    $('#clearProjects').addEventListener('click', () => {
-      if (confirm('Clear all projects?')) { data.projects = []; save(); renderProjects(); toast('Cleared', 'ok'); }
-    });
-    $('#clearStats').addEventListener('click', () => {
-      if (confirm('Reset statistics?')) { data.stats = { projects: 0, chars: 0, saved: 0 }; save(); updateStats(); toast('Reset', 'ok'); }
-    });
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
 
-    // ---- Init ----
-    updateStats();
-    renderProjects();
-    // Auto-set date display if needed
-  })();
-  </script>
+    setTimeout(function () {
+        URL.revokeObjectURL(url);
+    }, 1000);
+
+    updateStatus(
+        "Download started successfully.\n" +
+        "File: " + baseName + "-protected.html"
+    );
+
+});
+
+</script>
+
 </body>
 </html>
